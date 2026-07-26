@@ -54,8 +54,16 @@
       background: #ddf4ff;
       border-color: #54aeff;
       color: #0969da;
-      transform: translateX(3px);
     }
+
+    /* === KIỂU DÁNG HIGHLIGHT KHI ĐƯỢC CHỌN === */
+    .menu-item.active {
+      background-color: #0969da !important; /* Màu xanh lá/dương đậm */
+      color: #ffffff !important;            /* Chữ trắng nổi bật */
+      border-color: #0969da !important;
+      box-shadow: 0 2px 4px rgba(9, 105, 218, 0.3);
+    }
+
     /* Khung chứa Content các trang con */
     .content-area {
       flex-grow: 1;
@@ -75,7 +83,8 @@
   <div class="sidebar">
     <h2>Design for PSVN</h2>
     
-    <a href="./lobby.html" target="view-frame" class="menu-item">Get Job</a>
+    <!-- Mục đầu tiên mặc định được Highlight (active) -->
+    <a href="./lobby.html" target="view-frame" class="menu-item active">Get Job</a>
     <a href="./dash.html" target="view-frame" class="menu-item">Dashboard</a>
     <a href="./main_menu.html" target="view-frame" class="menu-item">Main Menu</a>
     <a href="./bxh.html" target="view-frame" class="menu-item">Staff Rankings</a>
@@ -91,6 +100,21 @@
   <div class="content-area">
     <iframe name="view-frame" src="./lobby.html"></iframe>
   </div>
+
+  <!-- Đoạn Script xử lý Highlight khi nhấp chuột -->
+  <script>
+    const menuItems = document.querySelectorAll('.menu-item');
+
+    menuItems.forEach(item => {
+      item.addEventListener('click', function() {
+        // Xóa class 'active' khỏi tất cả các nút
+        menuItems.forEach(i => i.classList.remove('active'));
+        
+        // Thêm class 'active' vào đúng nút vừa được bấm
+        this.classList.add('active');
+      });
+    });
+  </script>
 
 </body>
 </html>
