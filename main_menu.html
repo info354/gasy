@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PSVN Sidebar - Official Brand Theme</title>
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        /* ========================================================
+           HỆ THỐNG BIẾN THIẾT KẾ THEO QUY CHUẨN PSVN
+           ======================================================== */
+        :root {
+            --bg-white: #ffffff;         /* Nền chính */
+            --brand-orange: #f67e20;     /* Điểm nhấn, Active, CTA */
+            --text-main: #282828;        /* Chữ chính, tiêu đề */
+            --text-sub: #6f6b65;         /* Chữ phụ, mô tả */
+            --border-color: #7e7a75;     /* Viền, placeholder, chi tiết phụ */
+            
+            /* Biến hỗ trợ hiệu ứng mềm mại */
+            --bg-hover: rgba(111, 107, 101, 0.05); /* Lớp nền xám cực mỏng khi hover */
+            --border-light: rgba(126, 122, 117, 0.2); /* Viền mỏng mềm mại hơn cho Layout */
+            --transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            background-color: #f8fafc; /* Nền ngoài cùng để tôn nền trắng của UI */
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            padding: 40px;
+            display: flex;
+            gap: 40px; 
+            height: 100vh;
+            box-sizing: border-box;
+            color: var(--text-main);
+        }
+
+        /* ========================================================
+           COMPONENT 1: SIDEBAR MENU 
+           ======================================================== */
+        .sidebar {
+            width: 280px; 
+            background: var(--bg-white);
+            border: 1px solid var(--border-light);
+            border-radius: 12px; 
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 4px 20px rgba(40, 40, 40, 0.05);
+            height: calc(100vh - 80px); 
+            flex-shrink: 0; 
+        }
+
+        .sidebar-header {
+            display: flex; align-items: center; justify-content: space-between; 
+            padding-bottom: 16px; margin-bottom: 12px;
+            border-bottom: 1px solid var(--border-light); flex-shrink: 0;
+        }
+
+        .logo-wrapper {
+            display: flex; align-items: center; gap: 12px;
+            font-weight: 700; font-size: 1.1rem; color: var(--text-main);
+        }
+
+        .logo-box {
+            width: 34px; height: 34px; border-radius: 8px; 
+            display: grid; place-items: center; 
+            background: var(--brand-orange); 
+            color: var(--bg-white); font-size: 0.9rem; font-weight: 700;
+        }
+
+        .btn-toggle-all {
+            width: 32px; height: 32px; display: flex; align-items: center; justify-content: center;
+            background: transparent; border: 1px solid transparent; border-radius: 8px;
+            color: var(--border-color); cursor: pointer; transition: var(--transition);
+        }
+
+        .btn-toggle-all:hover { 
+            background: var(--bg-hover); 
+            color: var(--brand-orange); 
+            border-color: var(--border-light);
+        }
+        .btn-toggle-all svg { width: 18px; height: 18px; }
+        .btn-toggle-all svg.icon-unfold { display: none; } 
+        .btn-toggle-all.state-expand svg.icon-fold { display: none; }
+        .btn-toggle-all.state-expand svg.icon-unfold { display: block; }
+
+        .menu-scroll-area {
+            display: flex; flex-direction: column; gap: 4px; 
+            overflow-y: auto; flex-grow: 1; 
+        }
+        
+        .menu-scroll-area::-webkit-scrollbar { width: 4px; }
+        .menu-scroll-area::-webkit-scrollbar-thumb { background: var(--border-light); border-radius: 4px; }
+
+        .menu-group { display: flex; flex-direction: column; position: relative; }
+
+        /* Menu Chính (Cấp 1) */
+        .menu-parent {
+            display: flex; align-items: center; padding: 12px 14px; 
+            border-radius: 8px; cursor: pointer; color: var(--text-main); 
+            font-weight: 500; font-size: 0.95rem; transition: var(--transition);
+            position: relative; z-index: 2; text-decoration: none; 
+            border: 1px solid transparent;
+        }
+
+        .menu-parent i:first-child { margin-right: 12px; width: 20px; height: 20px; color: var(--border-color); transition: var(--transition);}
+        
+        .menu-parent:hover { background: var(--bg-hover); }
+        .menu-parent:hover i:first-child { color: var(--brand-orange); } /* Icon cam khi hover */
+
+        /* Menu Chính - Trạng thái Active */
+        .menu-group.expanded .menu-parent {
+            color: var(--brand-orange);     
+            font-weight: 600; 
+            background: transparent;
+        }
+        .menu-group.expanded .menu-parent i:first-child { color: var(--brand-orange); }
+
+        /* Vùng Submenu */
+        .submenu-container {
+            max-height: 0; overflow: hidden; transition: max-height 0.3s ease-in-out; 
+            background: var(--bg-white);
+            margin: 0 8px; 
+            position: relative; z-index: 1; 
+            border-left: 1px solid var(--border-light); /* Kẻ line dọc phân cấp */
+            margin-left: 22px; /* Thụt lề theo icon */
+        }
+
+        .menu-group.expanded .submenu-container {
+            max-height: 500px; padding: 4px 0 12px 0;
+        }
+
+        /* Menu Phụ (Cấp 2) */
+        .sub-item {
+            display: flex; align-items: center; padding: 10px 16px 10px 24px; 
+            font-size: 0.85rem; color: var(--text-sub); font-weight: 400;
+            text-decoration: none; transition: var(--transition); position: relative;
+        }
+
+        .sub-item:hover { color: var(--text-main); font-weight: 500;}
+
+        /* Điểm nhấn chấm cam khi Hover Submenu */
+        .sub-item::before {
+            content: ''; position: absolute; left: -2px; top: 50%;
+            width: 3px; height: 0; background: var(--brand-orange); 
+            transform: translateY(-50%); transition: var(--transition);
+            border-radius: 0 4px 4px 0;
+        }
+
+        .sub-item:hover::before { height: 16px; } /* Kéo dài vạch cam */
+
+        .chevron { margin-left: auto; width: 16px !important; color: var(--border-color); transition: transform 0.3s; }
+        .menu-parent:hover .chevron { color: var(--text-main); }
+        .expanded .chevron { transform: rotate(180deg); color: var(--brand-orange) !important; }
+
+        /* ========================================================
+           COMPONENT 2: SPECS PANEL (BẢNG THÔNG SỐ)
+           ======================================================== */
+        .specs-panel {
+            flex-grow: 1; 
+            background: var(--bg-white);
+            border-radius: 12px;
+            padding: 40px;
+            box-shadow: 0 4px 20px rgba(40, 40, 40, 0.05);
+            border: 1px solid var(--border-light);
+            overflow-y: auto;
+            height: calc(100vh - 80px);
+            box-sizing: border-box;
+        }
+
+        .specs-panel h1 { margin-top: 0; font-size: 1.8rem; color: var(--text-main); letter-spacing: -0.5px; }
+        .specs-panel h2 { font-size: 1.1rem; color: var(--text-main); margin-top: 32px; border-bottom: 1px solid var(--border-light); padding-bottom: 8px; }
+        .specs-panel p { line-height: 1.6; color: var(--text-sub); font-size: 0.95rem; }
+        
+        .specs-panel ul { padding-left: 20px; color: var(--text-sub); font-size: 0.95rem; line-height: 1.8; }
+        .specs-panel li strong { color: var(--text-main); font-weight: 600; }
+        
+        .tag {
+            display: inline-block; padding: 4px 8px; background: var(--bg-hover); 
+            border-radius: 6px; font-family: monospace; font-size: 0.85rem; color: var(--brand-orange);
+            border: 1px solid var(--border-light);
+        }
+
+        .color-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); 
+            gap: 16px; margin-top: 16px;
+        }
+
+        .color-card {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px; border-radius: 8px; border: 1px solid var(--border-light);
+            background: var(--bg-white);
+        }
+
+        .color-swatch {
+            width: 32px; height: 32px; border-radius: 6px;
+            border: 1px solid rgba(0,0,0,0.1); 
+        }
+
+        .color-info { display: flex; flex-direction: column; }
+        .color-name { font-size: 0.85rem; font-weight: 600; color: var(--text-main); }
+        .color-hex { font-size: 0.75rem; color: var(--text-sub); font-family: monospace; text-transform: uppercase;}
+
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div class="sidebar-header">
+            <div class="logo-wrapper">
+                <div class="logo-box">PS</div>
+                <span>PSVN</span>
+            </div>
+            
+            <button id="toggleAllBtn" class="btn-toggle-all" onclick="toggleAllMenus()" title="Collapse all">
+                <i data-lucide="fold-vertical" class="icon-fold"></i>
+                <i data-lucide="unfold-vertical" class="icon-unfold"></i>
+            </button>
+        </div>
+
+        <div class="menu-scroll-area">
+            <a href="#" class="menu-parent">
+                <i data-lucide="layout-dashboard"></i>
+                <span>Dashboard</span>
+            </a>
+
+            <div class="menu-group">
+                <div class="menu-parent" onclick="toggleMenu(this)">
+                    <i data-lucide="calendar"></i>
+                    <span>Booking</span>
+                    <i data-lucide="chevron-down" class="chevron"></i>
+                </div>
+                <div class="submenu-container">
+                    <a href="#" class="sub-item">New Reservation</a>
+                    <a href="#" class="sub-item">Schedule List</a>
+                    <a href="#" class="sub-item">Availability</a>
+                </div>
+            </div>
+
+            <div class="menu-group">
+                <div class="menu-parent" onclick="toggleMenu(this)">
+                    <i data-lucide="wallet"></i>
+                    <span>Finance Hub</span>
+                    <i data-lucide="chevron-down" class="chevron"></i>
+                </div>
+                <div class="submenu-container">
+                    <a href="#" class="sub-item">Transactions</a>
+                    <a href="#" class="sub-item">Invoices</a>
+                    <a href="#" class="sub-item">Reports</a>
+                </div>
+            </div>
+
+            <div class="menu-group expanded">
+                <div class="menu-parent" onclick="toggleMenu(this)">
+                    <i data-lucide="ticket"></i>
+                    <span>Tickets</span>
+                    <i data-lucide="chevron-down" class="chevron"></i>
+                </div>
+                <div class="submenu-container">
+                    <a href="#" class="sub-item">My Tickets</a>
+                    <a href="#" class="sub-item">Ticket Management</a>
+                    <a href="#" class="sub-item">Ticket Type</a>
+                    <a href="#" class="sub-item">Ticket Permissions</a>
+                </div>
+            </div>
+
+            <div class="menu-group">
+                <div class="menu-parent" onclick="toggleMenu(this)">
+                    <i data-lucide="users"></i>
+                    <span>Organization</span>
+                    <i data-lucide="chevron-down" class="chevron"></i>
+                </div>
+                <div class="submenu-container">
+                    <a href="#" class="sub-item">Staff Members</a>
+                    <a href="#" class="sub-item">Departments</a>
+                    <a href="#" class="sub-item">Roles</a>
+                </div>
+            </div>
+
+            <a href="#" class="menu-parent">
+                <i data-lucide="settings"></i>
+                <span>Settings</span>
+            </a>
+        </div>
+    </div>
+
+    <div class="specs-panel">
+        <h1>Bảng Thông Số Kỹ Thuật (Official UI)</h1>
+        <p><strong>Component:</strong> Main Navigation Sidebar<br>
+           <strong>Style:</strong> Minimalist & Modern</p>
+
+        <h2>1. Bảng Màu Tiêu Chuẩn (Color Palette)</h2>
+        <p>Áp dụng khắt khe 5 mã màu theo quy chuẩn thương hiệu nhằm giữ sự tối giản, rành mạch.</p>
+        
+        <div class="color-grid">
+            <div class="color-card">
+                <div class="color-swatch" style="background: #ffffff;"></div>
+                <div class="color-info"><span class="color-name">Nền chính</span><span class="color-hex">#ffffff</span></div>
+            </div>
+            <div class="color-card">
+                <div class="color-swatch" style="background: #f67e20;"></div>
+                <div class="color-info"><span class="color-name">Cam Vibrant (Active)</span><span class="color-hex">#f67e20</span></div>
+            </div>
+            <div class="color-card">
+                <div class="color-swatch" style="background: #282828;"></div>
+                <div class="color-info"><span class="color-name">Chữ chính (Dark Grey)</span><span class="color-hex">#282828</span></div>
+            </div>
+            <div class="color-card">
+                <div class="color-swatch" style="background: #6f6b65;"></div>
+                <div class="color-info"><span class="color-name">Chữ phụ (Ashy Grey)</span><span class="color-hex">#6f6b65</span></div>
+            </div>
+            <div class="color-card">
+                <div class="color-swatch" style="background: #7e7a75;"></div>
+                <div class="color-info"><span class="color-name">Viền/Icon (Brown Grey)</span><span class="color-hex">#7e7a75</span></div>
+            </div>
+        </div>
+
+        <h2>2. Cấu trúc Typography & Hiệu ứng</h2>
+        <ul>
+            <li><strong>Menu Chính:</strong> Sử dụng màu <span class="tag">#282828</span>. Khi mở (Active), chữ và icon chuyển sang màu cam <span class="tag">#f67e20</span>, in đậm <span class="tag">600</span>.</li>
+            <li><strong>Submenu:</strong> Sử dụng màu <span class="tag">#6f6b65</span>. Khi lướt chuột qua (Hover), xuất hiện một vạch line đứng màu cam bên trái để đánh dấu vị trí.</li>
+            <li><strong>Đường viền:</strong> Màu <span class="tag">#7e7a75</span> được tinh chỉnh giảm opacity (độ mờ) xuống 20% tại các đường nét chia cắt để không làm giao diện bị "cứng", đúng chất tối giản.</li>
+            <li><strong>Smart Toggle:</strong> Giữ nguyên nút chức năng thu gọn/mở rộng tất cả menu trên góc phải.</li>
+        </ul>
+    </div>
+
+    <script>
+        lucide.createIcons();
+        let isAllCollapsed = false;
+
+        function toggleMenu(element) {
+            const group = element.parentElement;
+            group.classList.toggle('expanded');
+        }
+
+        function toggleAllMenus() {
+            const btn = document.getElementById('toggleAllBtn');
+            const allGroups = document.querySelectorAll('.menu-group');
+
+            if (!isAllCollapsed) {
+                allGroups.forEach(group => group.classList.remove('expanded'));
+                btn.classList.add('state-expand');
+                btn.setAttribute('title', 'Expand all');
+                isAllCollapsed = true;
+            } else {
+                allGroups.forEach(group => group.classList.add('expanded'));
+                btn.classList.remove('state-expand');
+                btn.setAttribute('title', 'Collapse all');
+                isAllCollapsed = false;
+            }
+        }
+    </script>
+</body>
+</html>

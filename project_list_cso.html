@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSO Dashboard - Final Fixed Icons</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        :root {
+            --bg-main: #ffffff;
+            --accent-orange: #f67e20;
+            --text-main: #282828;
+            --text-sub: #6f6b65;
+            --bg-body: #f4f7fa;
+            --card-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            --focus-shadow: 0 12px 24px rgba(246, 126, 32, 0.2);
+            --tooltip-bg: #282828;
+            --main-font: Arial, Helvetica, sans-serif;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body { 
+            background-color: var(--bg-body); 
+            padding: 25px; 
+            color: var(--text-main); 
+            font-family: var(--main-font); 
+        }
+
+        /* Menu Bar */
+        .header-nav {
+            display: flex; justify-content: space-between; align-items: center;
+            background: white; padding: 12px 25px; border-radius: 12px;
+            margin-bottom: 25px; box-shadow: var(--card-shadow);
+        }
+
+        .status-tabs { display: flex; gap: 8px; }
+        .tab { padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: bold; cursor: pointer; color: var(--text-sub); transition: 0.2s; }
+        .tab.active { background: var(--text-main); color: white; }
+
+        /* Grid System */
+        .job-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .job-grid:hover .job-card { opacity: 0.5; filter: blur(0.5px); }
+
+        .job-card {
+            background: white; border-radius: 10px; border: 1px solid #e1e4e8;
+            position: relative; transition: all 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+
+        .job-card:hover {
+            opacity: 1 !important; transform: scale(1.04); filter: blur(0) !important;
+            z-index: 999; border-color: var(--accent-orange); box-shadow: var(--focus-shadow);
+        }
+
+        /* Card Header & Icons */
+        .card-header { display: flex; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid #f5f5f5; }
+        
+        .action-icons { display: flex; gap: 10px; color: var(--text-sub); }
+        .icon-wrapper { display: inline-flex; cursor: pointer; transition: 0.2s; }
+        .icon-wrapper i { font-size: 14px; }
+        .icon-wrapper:hover { color: var(--accent-orange); }
+
+        .tag-status { background: #fff1e6; color: var(--accent-orange); font-size: 10px; font-weight: 900; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; }
+
+        .card-body { padding: 12px; }
+        
+        .meta-box { background: #f8f9fa; padding: 6px 10px; border-radius: 6px; font-size: 11px; color: var(--text-sub); display: flex; justify-content: space-between; margin-bottom: 10px; }
+        .project-name { font-size: 13px; font-weight: bold; display: flex; justify-content: space-between; align-items: center; }
+
+        /* Service Popup */
+        .service-popup {
+            display: none; position: absolute; top: 95%; left: 0; width: 100%;
+            background: white; border: 1px solid var(--accent-orange); border-top: none;
+            border-radius: 0 0 10px 10px; padding: 15px; box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+        }
+        .job-card:hover .service-popup { display: block; }
+        .service-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .service-table td { padding: 6px 0; border-bottom: 1px solid #f9f9f9; }
+        .price { font-weight: bold; text-align: right; }
+
+        /* --- ENGLISH TOOLTIP SYSTEM --- */
+        [data-tooltip] { position: relative; }
+        [data-tooltip]::after {
+            content: attr(data-tooltip);
+            position: absolute; bottom: 140%; left: 50%; transform: translateX(-50%);
+            background: var(--tooltip-bg); color: #fff; padding: 4px 8px;
+            border-radius: 4px; font-size: 10px; font-family: var(--main-font);
+            font-weight: normal; white-space: nowrap;
+            opacity: 0; visibility: hidden; transition: 0.15s ease-out; z-index: 1001;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        }
+        [data-tooltip]::before {
+            content: ""; position: absolute; bottom: 120%; left: 50%; transform: translateX(-50%);
+            border: 5px solid transparent; border-top-color: var(--tooltip-bg);
+            opacity: 0; visibility: hidden; transition: 0.15s ease-out; z-index: 1001;
+        }
+        [data-tooltip]:hover::after, [data-tooltip]:hover::before { opacity: 1; visibility: visible; }
+
+    </style>
+</head>
+<body>
+
+    <div class="header-nav">
+        <div class="status-tabs">
+            <div class="tab active">All (20)</div>
+            <div class="tab">Awaiting</div>
+            <div class="tab">Processing</div>
+            <div class="tab">Delivered</div>
+        </div>
+        <div style="font-size: 14px; font-weight: bold; color: var(--accent-orange);">CSO CONTROL PANEL</div>
+    </div>
+
+    <div class="job-grid" id="grid"></div>
+
+    <script>
+        const grid = document.getElementById('grid');
+        const users = ["Mai Anh", "Long Nguyen", "Hoai An", "Quoc Nam", "Thanh Tung", "Minh Duc", "Van Thinh", "Dieu Linh", "Hoang Yen", "Tuan Kiet"];
+        
+        let cardsHTML = '';
+        for (let i = 1; i <= 20; i++) {
+            const userName = users[i % users.length];
+            cardsHTML += `
+            <div class="job-card">
+                <div class="card-header">
+                    <div class="action-icons">
+                        <span class="icon-wrapper" data-tooltip="Approve Job"><i class="fa-regular fa-circle-check"></i></span>
+                        <span class="icon-wrapper" data-tooltip="Work Logs"><i class="fa-regular fa-clipboard"></i></span>
+                        <span class="icon-wrapper" data-tooltip="Edit Job"><i class="fa-regular fa-pen-to-square"></i></span>
+                        <span class="icon-wrapper" data-tooltip="Client Info"><i class="fa-solid fa-circle-info"></i></span>
+                        <span class="icon-wrapper" data-tooltip="High Priority"><i class="fa-solid fa-flag"></i></span>
+                    </div>
+                    <div style="display:flex; align-items:center; gap:6px;">
+                        <span class="tag-status">AWAITING</span>
+                        <span class="icon-wrapper" data-tooltip="Delete Order" style="color:#ccc;"><i class="fa-regular fa-trash-can"></i></span>
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="meta-box">
+                        <span>#${1400 + i} | ${userName}</span>
+                        <span>
+                            <span class="icon-wrapper" data-tooltip="Input Files" style="color:var(--text-sub);"><i class="fa-solid fa-download"></i></span> 3 &nbsp;
+                            <span class="icon-wrapper" data-tooltip="Remaining Time" style="color:var(--text-sub);"><i class="fa-regular fa-clock"></i></span> ${i*3}m
+                        </span>
+                    </div>
+                    <div class="project-name">
+                        <span>Project: Premium Pack #${i}</span>
+                        <i class="fa-solid fa-chevron-down" style="color:var(--accent-orange); font-size:10px;"></i>
+                    </div>
+                </div>
+                <div class="service-popup">
+                    <table class="service-table">
+                        <tr><td>Advanced Retouch</td><td>x2</td><td class="price">$16</td></tr>
+                        <tr><td>Color Correction</td><td>x1</td><td class="price">$5</td></tr>
+                        <tr><td>Background Clean</td><td>x1</td><td class="price">$10</td></tr>
+                    </table>
+                </div>
+            </div>`;
+        }
+        grid.innerHTML = cardsHTML;
+    </script>
+</body>
+</html>

@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Group Ranking Dashboard - Uniform Mode</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* --- CSS VARIABLES (Theo đúng chuẩn Brand Guidelines) --- */
+        :root {
+            --bg-main: #ffffff;      /* Nền chính */
+            --accent: #f67e20;       /* Màu điểm nhấn, CTA, đường line */
+            --text-main: #282828;    /* Màu chữ chính, tiêu đề, dark blocks */
+            --text-sub: #6f6b65;     /* Màu chữ phụ, mô tả */
+            --border: #7e7a75;       /* Đường viền, chi tiết phụ */
+            --bg-soft: #f9f9f9;      /* Nền hover nhẹ */
+        }
+
+        /* --- GLOBAL STYLES --- */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            padding: 2rem;
+        }
+
+        /* --- HEADER --- */
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            border-bottom: 2px solid var(--bg-soft);
+            padding-bottom: 1rem;
+        }
+
+        .title-area h1 {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-main);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .title-area span {
+            color: var(--text-sub);
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background-color: var(--accent);
+            color: var(--bg-main);
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 4px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        /* --- RANKING GRID --- */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 1.5rem;
+            align-items: start;
+        }
+
+        .group-card {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            overflow: hidden;
+            background: var(--bg-main);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+
+        .group-header {
+            background-color: var(--text-main);
+            color: var(--bg-main);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .group-header h2 {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        /* --- STAFF LIST WITH SCROLLBAR --- */
+        .staff-list {
+            padding: 0;
+            max-height: 450px; /* Giữ cố định chiều cao */
+            overflow-y: auto;
+        }
+
+        /* Custom Scrollbar */
+        .staff-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        .staff-list::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .staff-list::-webkit-scrollbar-thumb {
+            background: #ccc;
+            border-radius: 4px;
+        }
+        .staff-list::-webkit-scrollbar-thumb:hover {
+            background: var(--border);
+        }
+
+        .staff-item {
+            display: flex;
+            align-items: center;
+            padding: 0.8rem 1rem;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.2s;
+            background-color: var(--bg-main); /* Đồng màu trắng */
+        }
+
+        .staff-item:hover {
+            background-color: var(--bg-soft); /* Highlight nhẹ khi trỏ chuột */
+        }
+
+        .rank-number {
+            font-weight: 700;
+            color: var(--text-sub);
+            width: 30px;
+            font-size: 0.9rem;
+        }
+
+        .staff-info {
+            flex-grow: 1;
+            margin-left: 0.5rem;
+        }
+
+        .staff-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+            color: var(--text-main);
+            display: block;
+        }
+
+        .staff-meta {
+            font-size: 0.8rem;
+            color: var(--text-sub);
+        }
+
+        /* --- LOADING BAR --- */
+        .loading-stats {
+            text-align: right;
+            min-width: 90px;
+        }
+
+        .percent-text {
+            font-weight: 700;
+            font-size: 0.9rem;
+            transition: color 0.3s;
+        }
+
+        .progress-container {
+            width: 100%;
+            height: 6px;
+            background: #eee;
+            margin-top: 4px;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 0.3s, background-color 0.3s;
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="title-area">
+            <h1>Resource Allocation Board</h1>
+            <span>Ưu tiên gán việc cho những nhân sự ở Top (Loading thấp)</span>
+        </div>
+        <button class="btn-primary">+ Assign Selected</button>
+    </header>
+
+    <div class="dashboard-grid" id="dashboard">
+        </div>
+
+    <script>
+        // 1. Hàm tạo dữ liệu mock tự động
+        function generateMockStaff(count, prefix) {
+            const staffList = [];
+            const lastNames = ["Nguyen", "Tran", "Le", "Pham", "Hoang", "Huynh", "Phan", "Vu", "Vo", "Dang", "Bui", "Do"];
+            const firstNames = ["Anh", "Binh", "Chau", "Dung", "Em", "Phong", "Giang", "Hai", "Linh", "Khoa", "Minh", "Nam"];
+            
+            for (let i = 0; i < count; i++) {
+                const randomFirst = firstNames[Math.floor(Math.random() * firstNames.length)].toLowerCase();
+                const randomLast = lastNames[Math.floor(Math.random() * lastNames.length)].toLowerCase().charAt(0);
+                
+                // Random loading từ 0% đến 250%
+                const loading = parseFloat((Math.random() * 250).toFixed(1));
+                const mins = Math.round((loading / 100) * 480);
+
+                staffList.push({
+                    name: `${randomFirst}.${randomLast} (${prefix})`,
+                    mins: mins,
+                    loading: loading
+                });
+            }
+            return staffList;
+        }
+
+        // Cấu trúc Data
+        const groupData = [
+            { name: "HN", staffs: generateMockStaff(15, "hn") },
+            { name: "HY", staffs: generateMockStaff(18, "hy") },
+            { name: "MIX", staffs: generateMockStaff(12, "mix") },
+            { name: "LS", staffs: generateMockStaff(20, "ls") },
+            { name: "MULTI_HY", staffs: generateMockStaff(14, "mhy") }
+        ];
+
+        // 2. Render dữ liệu (Bản Đồng Màu)
+        function renderDashboard() {
+            const container = document.getElementById('dashboard');
+            
+            groupData.forEach(group => {
+                // SẮP XẾP TĂNG DẦN: Người rảnh lên top đầu
+                const sortedStaff = group.staffs.sort((a, b) => a.loading - b.loading);
+                
+                let html = `
+                    <div class="group-card">
+                        <div class="group-header">
+                            <h2>${group.name}</h2>
+                            <small>${sortedStaff.length} Members</small>
+                        </div>
+                        <div class="staff-list">
+                `;
+
+                sortedStaff.forEach((staff, index) => {
+                    const isOverloaded = staff.loading > 100;
+                    
+                    // Logic màu sắc tinh tế cho thanh bar
+                    const barColor = isOverloaded ? 'var(--text-sub)' : 'var(--accent)';
+                    const textColor = isOverloaded ? 'var(--text-sub)' : 'inherit';
+
+                    html += `
+                        <div class="staff-item">
+                            <div class="rank-number">#${index + 1}</div>
+                            <div class="staff-info">
+                                <span class="staff-name">${staff.name}</span>
+                                <span class="staff-meta">${staff.mins} Mins Logged</span>
+                            </div>
+                            <div class="loading-stats">
+                                <span class="percent-text" style="color: ${textColor}">
+                                    ${staff.loading}%
+                                </span>
+                                <div class="progress-container">
+                                    <div class="progress-bar" style="width: ${Math.min(staff.loading, 100)}%; background-color: ${barColor}"></div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                html += `</div></div>`;
+                container.innerHTML += html;
+            });
+        }
+
+        // Khởi chạy
+        document.addEventListener('DOMContentLoaded', renderDashboard);
+    </script>
+</body>
+</html>

@@ -1,0 +1,552 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>PSVN Terminal - Refined UI/UX</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* BRAND IDENTITY COLORS */
+            --brand-white: #ffffff;
+            --brand-orange: #f67e20;
+            --brand-dark: #282828;
+            --brand-gray: #6f6b65;
+            --brand-border: #7e7a75;
+
+            /* MAPPING UI VARIABLES */
+            --bg-main: var(--brand-white);
+            --text-main: var(--brand-dark);
+            --text-muted: var(--brand-gray);
+            --accent: var(--brand-orange);
+            --border-soft: rgba(126, 122, 117, 0.25); 
+            --border-strong: rgba(126, 122, 117, 0.5); 
+            --row-hl: rgba(246, 126, 32, 0.05); 
+            
+            /* SEMANTIC COLORS (Ghi chú, Cảnh báo, Trạng thái) */
+            --bg-yellow: #fffdf5; 
+            --border-yellow: #fde68a;
+            --text-yellow: #b45309;
+            
+            --bg-red: #fff5f5;    
+            --border-red: #fca5a5;
+            --text-red: #b91c1c;
+
+            /* SEMANTIC BUTTON COLORS (Màu tươi sáng chuẩn UX) */
+            --btn-start: var(--brand-orange);
+            --btn-start-hover: #e06f15;
+            --btn-complete: #10b981; /* Xanh ngọc tươi */
+            --btn-complete-hover: #059669;
+            --btn-reject: #ef4444;   /* Đỏ tươi */
+            --btn-reject-hover: #dc2626;
+            --btn-pause: #64748b;    /* Xám xanh (Slate) tươi */
+            --btn-pause-hover: #475569;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background: var(--bg-main); color: var(--text-main); font-size: 12px; height: 100vh; overflow: hidden; }
+
+        .app-container { display: flex; height: 100vh; width: 100vw; }
+        .main-content { flex: 1; display: flex; flex-direction: column; background: var(--brand-white); overflow: hidden; }
+
+        /* TOP NAV */
+        .top-nav { padding: 12px 20px; border-bottom: 1px solid var(--border-strong); display: flex; justify-content: space-between; align-items: center; background: var(--brand-white); }
+        .btn-spec { padding: 6px 12px; background: var(--brand-white); color: var(--brand-dark); border: 1px solid var(--brand-border); border-radius: 4px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; transition: 0.2s;}
+        .btn-spec:hover { border-color: var(--accent); color: var(--accent); }
+        
+        /* GRID CHÍNH */
+        .master-grid {
+            display: grid;
+            grid-template-columns: 80px 80px 100px 100px 90px 80px 90px 280px 85px 85px 100px 1fr;
+            min-width: 1250px;
+        }
+
+        .scroll-area { flex: 1; overflow: auto; position: relative; }
+        .th { padding: 14px 10px; background: var(--brand-white); font-weight: 700; border-bottom: 2px solid var(--border-strong); position: sticky; top: 0; z-index: 50; font-size: 10px; text-transform: uppercase; color: var(--brand-dark); }
+        
+        /* PINNED COLUMNS */
+        .col-pin-1 { position: sticky; left: 0; z-index: 40; background: var(--brand-white); border-left: 1px solid var(--border-soft); border-right: 1px solid var(--border-soft); box-shadow: -2px 0 5px rgba(0,0,0,0.02);}
+        .col-pin-2 { position: sticky; left: 100px; z-index: 40; background: var(--brand-white); border-right: 1px solid var(--border-soft); box-shadow: 3px 0 5px rgba(0,0,0,0.05); }
+        .th.col-pin-1, .th.col-pin-2 { z-index: 60; background: var(--brand-white); border-bottom: 2px solid var(--border-strong); }
+
+        .row { border-bottom: 1px solid var(--border-soft); cursor: pointer; background: var(--brand-white); transition: background 0.1s; }
+        .row:hover { background: #fafafa; }
+        
+        /* SỬ DỤNG MÀU ACCENT (CAM) ĐỂ ĐIỂM XUYẾT BORDER LEFT KHI SELECT ROW */
+        .row.selected { background: var(--row-hl) !important; }
+        .row.selected .col-pin-1 { background: var(--row-hl) !important; box-shadow: inset 3px 0 0 0 var(--accent); }
+        .row.selected .col-pin-2 { background: var(--row-hl) !important; }
+
+        .td { padding: 12px 10px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; align-items: center; }
+        .text-note-list { color: var(--text-muted); font-size: 12px; }
+
+        /* CLICK TO COPY */
+        .click-copy { cursor: copy; transition: opacity 0.2s; }
+        .click-copy:hover { opacity: 0.7; text-decoration: underline; color: var(--accent); }
+
+        /* ======== SIDEBAR ======== */
+        .sidebar { width: 0; background: var(--brand-white); border-left: 1px solid var(--border-strong); transition: width 0.3s ease; display: flex; flex-direction: column; }
+        .sidebar.open { width: 440px; }
+        
+        .sidebar-header { padding: 20px 25px 15px; display: flex; justify-content: space-between; align-items: center; background: var(--brand-white); z-index: 10; border-bottom: 1px solid var(--border-soft);}
+        .sidebar-actions-pinned { padding: 15px 25px 0; background: var(--brand-white); z-index: 9; }
+        
+        /* TABS CSS (Accent Color Focus) */
+        .sidebar-tabs { display: flex; border-bottom: 1px solid var(--border-strong); background: var(--brand-white); padding: 0 25px; margin-top: 15px;}
+        .tab-btn { padding: 10px 15px; font-weight: 700; font-size: 11px; color: var(--text-muted); cursor: pointer; border: none; background: transparent; border-bottom: 3px solid transparent; transition: 0.2s; text-transform: uppercase; outline: none; }
+        .tab-btn:hover { color: var(--brand-dark); }
+        .tab-btn.active { color: var(--accent); border-bottom: 3px solid var(--accent); }
+        
+        .tab-content { display: none; flex: 1; overflow-y: auto; padding: 25px; overflow-x: hidden; background: #fafafa;}
+        .tab-content.active { display: block; }
+        
+        /* DETAILS TAB CONTENT */
+        .section-wrap { margin-bottom: 25px; padding-bottom: 15px; border-bottom: 1px dashed var(--border-strong); }
+        .section-title { font-size: 11px; font-weight: 800; color: var(--brand-dark); text-transform: uppercase; margin-bottom: 15px; letter-spacing: 0.5px;}
+        
+        .data-title { font-size: 18px; font-weight: 800; color: var(--brand-dark); margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+        .data-subtitle { font-size: 14px; font-weight: 600; color: var(--brand-dark); margin-bottom: 8px; }
+        .data-meta { display: flex; flex-wrap: wrap; gap: 10px; font-size: 12px; color: var(--brand-gray); font-weight: 500; margin-bottom: 10px; align-items: center;}
+        
+        .block-yellow { padding: 10px; border-radius: 4px; font-size: 13px; line-height: 1.5; background-color: var(--bg-yellow); border: 1px solid var(--border-yellow); color: var(--text-yellow); margin-bottom: 12px; position: relative;}
+        .block-red { padding: 10px; border-radius: 4px; font-size: 13px; line-height: 1.5; background-color: var(--bg-red); border: 1px solid var(--border-red); color: var(--text-red); margin-bottom: 12px; position: relative; font-weight: 500;}
+        .box-indicator { position: absolute; top: -8px; right: 10px; font-size: 9px; font-weight: 800; text-transform: uppercase; padding: 2px 6px; border-radius: 4px; letter-spacing: 0.5px; }
+        .block-yellow .box-indicator { background: var(--border-yellow); color: var(--text-yellow); }
+        .block-red .box-indicator { background: var(--border-red); color: var(--text-red); }
+
+        .status-badge { padding: 4px 8px; border-radius: 4px; font-weight: 700; font-size: 11px; text-transform: uppercase;}
+        .users-list { font-size: 12px; color: var(--brand-dark); font-weight: 600; background: var(--brand-white); padding: 4px 8px; border-radius: 4px; display: inline-block; margin-bottom: 10px; border: 1px solid var(--border-strong); }
+
+        /* COMMENTS TAB CONTENT */
+        #tab-comments.active { display: flex; flex-direction: column; background: var(--brand-white); padding: 20px;}
+        #commentsList { flex: 1; overflow-y: auto; padding-right: 5px; margin-bottom: 15px;}
+        
+        .comment-item { margin-bottom: 15px; display: flex; gap: 12px; }
+        .cmt-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--row-hl); color: var(--accent); border: 1px solid var(--accent); display: flex; align-items: center; justify-content: center; font-weight: 800; font-size: 14px; flex-shrink: 0; }
+        .cmt-body { background: #fafafa; border: 1px solid var(--border-soft); padding: 10px 12px; border-radius: 0 8px 8px 8px; flex: 1; }
+        .cmt-header { display: flex; justify-content: space-between; margin-bottom: 4px; align-items: center;}
+        .cmt-user { font-weight: 700; color: var(--text-main); font-size: 12px;}
+        .cmt-time { font-size: 10px; color: var(--text-muted); font-weight: 500;}
+        .cmt-text { font-size: 13px; line-height: 1.5; color: var(--brand-dark); }
+        
+        .comment-input-area { flex-shrink: 0; display: flex; gap: 10px; border-top: 1px solid var(--border-strong); padding-top: 15px; }
+        .comment-input { flex: 1; padding: 10px; border: 1px solid var(--border-strong); border-radius: 4px; font-family: 'Inter'; font-size: 13px; resize: none; min-height: 40px; outline: none; transition: 0.2s; color: var(--brand-dark);}
+        .comment-input::placeholder { color: var(--brand-gray); }
+        .comment-input:focus { border-color: var(--accent); }
+        .btn-send { background: var(--accent); color: var(--brand-white); border: none; border-radius: 4px; padding: 0 15px; font-weight: 700; cursor: pointer; transition: 0.2s; text-transform: uppercase; font-size: 11px;}
+        .btn-send:hover { opacity: 0.9; }
+
+        /* MÀU BUTTONS THEO YÊU CẦU (TƯƠI SÁNG HƠN) */
+        .btn-wrapper-start { display: flex; width: 100%; }
+        .btn-wrapper-active { display: none; grid-template-columns: 1fr 1fr 1fr; gap: 8px; width: 100%; }
+        .btn-lrg { padding: 12px 10px; font-size: 11px; border-radius: 4px; border: none; font-weight: 800; cursor: pointer; color: var(--brand-white); text-transform: uppercase; text-align: center; transition: 0.2s;}
+        .btn-lrg:active { transform: scale(0.96); }
+        
+        .btn-start { background: var(--btn-start); width: 100%; } 
+        .btn-start:hover { background: var(--btn-start-hover); }
+        
+        .btn-complete { background: var(--btn-complete); } 
+        .btn-complete:hover { background: var(--btn-complete-hover); }
+        
+        .btn-reject { background: var(--btn-reject); } 
+        .btn-reject:hover { background: var(--btn-reject-hover); }
+        
+        .btn-pause { background: var(--btn-pause); } 
+        .btn-pause:hover { background: var(--btn-pause-hover); }
+
+        #toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--brand-dark); color: var(--brand-white); padding: 10px 20px; border-radius: 4px; font-weight: 600; display: none; z-index: 1000; box-shadow: 0 4px 10px rgba(0,0,0,0.15); }
+
+        /* DEV SPEC MODAL */
+        .modal-overlay { display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(40, 40, 40, 0.8); z-index: 2000; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
+        .modal-overlay.open { display: flex; }
+        .modal-content { background: var(--brand-white); width: 850px; max-width: 90%; max-height: 85vh; border-radius: 8px; overflow-y: auto; padding: 30px; position: relative; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1); }
+        .modal-close { position: absolute; top: 20px; right: 20px; background: none; border: none; font-size: 28px; cursor: pointer; color: var(--brand-gray); line-height: 1; }
+        .modal-close:hover { color: var(--brand-dark); }
+        .spec-doc { font-size: 13px; line-height: 1.6; color: var(--brand-dark); }
+        .spec-doc h2 { font-size: 20px; color: var(--brand-dark); margin-bottom: 5px; border-bottom: 2px solid var(--border-soft); padding-bottom: 10px; }
+        .spec-doc h4 { color: var(--accent); font-size: 15px; margin: 20px 0 10px; text-transform: uppercase; font-weight: 800;}
+        .spec-doc ul { margin-left: 20px; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+<div class="modal-overlay" id="devSpecModal">
+    <div class="modal-content">
+        <button class="modal-close" onclick="closeSpec()">&times;</button>
+        <div class="spec-doc">
+            <h2>📄 TÀI LIỆU BÀN GIAO KỸ THUẬT (HANDOVER SPEC)</h2>
+            <p><strong>Cập nhật UI/UX:</strong> Giảm tỷ lệ màu Cam cho text để tăng độ tương phản (đổi về Dark Grey), giới hạn màu Cam ở line/border/tab/chọn row. Cập nhật nút bấm sang dải màu tươi sáng.</p>
+            <h4>1. Grid List (11 Cột theo Order 1->11)</h4>
+            <ul>
+                <li><code>grid-template-columns: 80px 80px 100px 100px 90px 80px 90px 280px 85px 85px 100px 1fr;</code></li>
+            </ul>
+        </div>
+    </div>
+</div>
+
+<div class="app-container">
+    <div class="main-content">
+        <div class="top-nav">
+            <div>
+                <h2 style="font-size: 16px; color: var(--brand-dark);">Production Terminal <span style="font-weight: 500; font-size: 13px; color: var(--brand-gray); margin-left: 10px;">Refined UX Edition</span></h2>
+            </div>
+            <button class="btn-spec" onclick="openSpec()">📄 Dev Handover Spec</button>
+        </div>
+
+        <div class="scroll-area">
+            <div class="master-grid">
+                <div class="th">Client ID</div>           <div class="th">Client Code</div>         <div class="th sticky-col col-pin-1">Serv ID</div> <div class="th sticky-col col-pin-2">Serv Code</div> <div class="th">User</div>                <div class="th">Step</div>                <div class="th">Status</div>              <div class="th">Note Service</div>        <div class="th">T. Serv</div>             <div class="th">T. Step</div>             <div class="th">Group</div>               <div class="th"></div>
+            </div>
+            <div id="tableBody"></div>
+        </div>
+    </div>
+
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <h2 style="font-size: 18px; font-weight: 800; color: var(--brand-dark);">Job Details</h2>
+            <button onclick="closeSidebar(event)" style="background:none; border:none; font-size:28px; cursor:pointer; color:var(--brand-border);">&times;</button>
+        </div>
+        
+        <div class="sidebar-actions-pinned">
+            <div id="sideActionStart" class="btn-wrapper-start">
+                <button class="btn-lrg btn-start" onclick="startCurrentJob()">START JOB</button>
+            </div>
+            <div id="sideActionActive" class="btn-wrapper-active">
+                <button class="btn-lrg btn-complete" onclick="completeJob()">COMPLETE</button>
+                <button class="btn-lrg btn-reject" onclick="rejectJob()">REJECT</button>
+                <button class="btn-lrg btn-pause" onclick="pauseJob()">PAUSE</button>
+            </div>
+        </div>
+
+        <div class="sidebar-tabs">
+            <button class="tab-btn active" onclick="switchTab(event, 'tab-details')">DETAILS</button>
+            <button class="tab-btn" onclick="switchTab(event, 'tab-comments')">COMMENTS (3)</button>
+        </div>
+
+        <div id="tab-details" class="tab-content active">
+            <div class="section-wrap">
+                <div class="section-title">SERVICE INFO</div>
+                <div class="data-title">
+                    <span id="sServId" class="click-copy" title="Copy ID">---</span>
+                    <span id="sServCode" style="color: var(--brand-gray); font-weight: 500; font-size: 14px;">---</span>
+                </div>
+                <div class="data-subtitle" id="sServName">---</div>
+                <div class="block-yellow click-copy" title="Copy Note Service">
+                    <div class="box-indicator">Note</div>
+                    <span id="sNoteService">---</span>
+                </div>
+                <div class="users-list" title="Related Users">👥 <span id="sRelUsers">---</span></div>
+                <div class="data-meta">
+                    <span id="sStatus" class="status-badge">---</span>
+                    <span title="Timer Service" style="font-weight: 700; color: var(--text-red);">⏱ <span id="sTimerServ">---</span></span>
+                    <span title="Created Timestamp">🕒 <span id="sCreatedServ">---</span></span>
+                </div>
+            </div>
+
+            <div class="section-wrap">
+                <div class="section-title">STEP INFO</div>
+                <div class="data-title" style="font-size: 16px;" id="sStep">---</div>
+                <div class="block-red click-copy" title="Copy Warning Step" id="wrapWarnStep">
+                    <div class="box-indicator">Warning</div>
+                    <span id="sWarnStep">---</span>
+                </div>
+                <div class="data-meta">
+                    <span title="Timer Step" style="font-weight: 700; color: var(--text-red);">⏱ <span id="sTimerStep">---</span></span>
+                    <span title="Created Timestamp">🕒 <span id="sCreatedStep">---</span></span>
+                </div>
+            </div>
+
+            <div class="section-wrap">
+                <div class="section-title">GROUP INFO</div>
+                <div class="data-title" style="font-size: 16px;" id="sGroupName">---</div>
+                <div class="block-red click-copy" title="Copy Warning Group" id="wrapWarnGroup">
+                    <div class="box-indicator">Warning</div>
+                    <span id="sWarnGroup">---</span>
+                </div>
+            </div>
+
+            <div class="section-wrap">
+                <div class="section-title">CLIENT INFO</div>
+                <div class="data-title" style="font-size: 16px;">
+                    <span id="sClientId">---</span>
+                    <span style="color: var(--brand-border);">/</span>
+                    <span id="sClientCode" class="click-copy" title="Copy Code">---</span>
+                </div>
+                <div class="block-yellow click-copy" title="Copy Note Client" id="wrapNoteClient">
+                    <div class="box-indicator">Note</div>
+                    <span id="sNoteClient">---</span>
+                </div>
+                <div class="block-red click-copy" title="Copy Warning Client" id="wrapWarnClient">
+                    <div class="box-indicator">Warning</div>
+                    <span id="sWarnClient">---</span>
+                </div>
+            </div>
+
+            <div class="section-wrap" style="border-bottom:none;">
+                <div class="section-title">PROJECT INFO</div>
+                <div class="data-subtitle" id="sStatusProj" style="color: var(--brand-dark); font-weight: 700; margin-bottom: 4px;">---</div>
+                <div class="data-title" style="font-size: 15px;">
+                    <span id="sProjId" class="click-copy" title="Copy">---</span>
+                    <span id="sProjName" style="font-weight: 500; font-size: 13px; margin-left: 5px;">---</span>
+                </div>
+                <div class="data-meta" style="margin-top: 8px;">
+                    <span title="Timer Project" style="font-weight: 700; color: var(--text-red);">⏱ <span id="sTimerProj">---</span></span>
+                    <span title="Created Timestamp">🕒 <span id="sCreatedProj">---</span></span>
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-comments" class="tab-content">
+            <div id="commentsList">
+                </div>
+            
+            <div class="comment-input-area">
+                <textarea class="comment-input" placeholder="Viết bình luận, ghi chú..."></textarea>
+                <button class="btn-send">GỬI</button>
+            </div>
+        </div>
+    </aside>
+
+    <div id="toast">Copied to Clipboard!</div>
+</div>
+
+<script>
+    // 10 DÒNG DỮ LIỆU ĐA DẠNG
+    const data = [
+        { 
+            cId: "1374", cCode: "chEr", sId: "523456-1", sCode: "StN4", uName: "loi.nv", step: "Edit", statusServ: "Process", nServ: "Mock text cho Photo Editing.", tServ: "01:20:00", tStep: "01:20:00", gName: "HN",
+            sName: "Photo Editing", relUsers: "loi.nv, hong.pv", cDateServ: "20/03/2026 08:00", cDateStep: "20/03/2026 08:00", wStep: "Cảnh báo phần Step.", isStarted: true,
+            wGroup: "Cảnh báo Group HN.", nClient: "Note cho Client.", wClient: "Warning Client.",
+            pStatus: "PROCESSING", pId: "500101", pName: "Home Address 1", cDateProj: "20/03/2026 07:30", tProj: "02:00:00"
+        },
+        { 
+            cId: "1586", cCode: "ceGo", sId: "523456-2", sCode: "StE4", uName: "hong.pv", step: "QA", statusServ: "Wait", nServ: "Mock text cho Pano.", tServ: "00:45:00", tStep: "00:00:00", gName: "HN1",
+            sName: "Pano", relUsers: "hong.pv, cuong.vn", cDateServ: "20/03/2026 09:10", cDateStep: "20/03/2026 09:55", wStep: "", isStarted: false,
+            wGroup: "Cảnh báo Group HN1.", nClient: "Note cho Client ceGo.", wClient: "",
+            pStatus: "WAITING", pId: "500102", pName: "Home Address 2", cDateProj: "20/03/2026 09:00", tProj: "01:00:00"
+        },
+        { 
+            cId: "1923", cCode: "akls", sId: "523457-1", sCode: "Ptr.A", uName: "cuong.vn", step: "Upload", statusServ: "Complete", nServ: "Ghi chú chân dung.", tServ: "00:30:00", tStep: "00:05:00", gName: "HY1",
+            sName: "Portrait", relUsers: "cuong.vn", cDateServ: "19/03/2026 14:00", cDateStep: "19/03/2026 14:30", wStep: "Cảnh báo Upload.", isStarted: true,
+            wGroup: "", nClient: "Note của Client akls.", wClient: "Khách VIP.",
+            pStatus: "DONE", pId: "500103", pName: "Home Address 3", cDateProj: "19/03/2026 13:50", tProj: "00:40:00"
+        },
+        { 
+            cId: "1541", cCode: "shCo", sId: "523458-1", sCode: "D2D.A", uName: "lan.nt", step: "Edit", statusServ: "Pause", nServ: "Day to dusk mock text.", tServ: "00:15:00", tStep: "00:15:00", gName: "LS2",
+            sName: "Day to Dusk", relUsers: "lan.nt, hai.pd", cDateServ: "20/03/2026 10:00", cDateStep: "20/03/2026 10:00", wStep: "Cảnh báo làm bầu trời.", isStarted: false,
+            wGroup: "Group LS2 warning.", nClient: "Note shCo.", wClient: "",
+            pStatus: "PAUSED", pId: "500104", pName: "Home Address 4", cDateProj: "20/03/2026 09:45", tProj: "00:20:00"
+        },
+        { 
+            cId: "1737", cCode: "ryBo", sId: "523459-1", sCode: "BE3", uName: "hai.pd", step: "QA", statusServ: "Process", nServ: "Note cho Video BE3.", tServ: "03:00:00", tStep: "00:20:00", gName: "HN",
+            sName: "Video", relUsers: "hai.pd, mai.tn", cDateServ: "20/03/2026 07:00", cDateStep: "20/03/2026 09:40", wStep: "", isStarted: true,
+            wGroup: "", nClient: "Client ryBo note.", wClient: "Warning ryBo.",
+            pStatus: "PROCESSING", pId: "500105", pName: "Home Address 5", cDateProj: "20/03/2026 06:50", tProj: "03:15:00"
+        },
+        { 
+            cId: "1055", cCode: "liMo", sId: "523460-1", sCode: "BE2", uName: "mai.tn", step: "Edit", statusServ: "Wait", nServ: "Mock text cho 3D Floor plan.", tServ: "00:00:00", tStep: "00:00:00", gName: "HN1",
+            sName: "3D", relUsers: "mai.tn, truong.nq", cDateServ: "20/03/2026 11:00", cDateStep: "20/03/2026 11:00", wStep: "Cảnh báo dựng 3D.", isStarted: false,
+            wGroup: "Warning HN1.", nClient: "Note liMo.", wClient: "",
+            pStatus: "WAITING", pId: "500106", pName: "Home Address 6", cDateProj: "20/03/2026 10:50", tProj: "00:00:00"
+        },
+        { 
+            cId: "1097", cCode: "anSc", sId: "523461-1", sCode: "StE6_TW", uName: "truong.nq", step: "QA", statusServ: "Complete", nServ: "Mock text Floor plan.", tServ: "01:10:00", tStep: "00:10:00", gName: "HY1",
+            sName: "Floor plan", relUsers: "truong.nq, dat.dt", cDateServ: "20/03/2026 13:00", cDateStep: "20/03/2026 14:00", wStep: "", isStarted: true,
+            wGroup: "", nClient: "Client anSc note.", wClient: "Warning anSc.",
+            pStatus: "DONE", pId: "500107", pName: "Home Address 7", cDateProj: "20/03/2026 12:45", tProj: "01:30:00"
+        },
+        { 
+            cId: "1032", cCode: "joBe", sId: "523462-1", sCode: "StE5_TW", uName: "dat.dt", step: "Edit", statusServ: "Process", nServ: "Mock text Photo Editing.", tServ: "00:45:00", tStep: "00:45:00", gName: "LS2",
+            sName: "Photo Editing", relUsers: "dat.dt, hung.tm", cDateServ: "20/03/2026 14:30", cDateStep: "20/03/2026 14:30", wStep: "Cảnh báo phần Edit.", isStarted: true,
+            wGroup: "Warning LS2.", nClient: "Note joBe.", wClient: "",
+            pStatus: "PROCESSING", pId: "500108", pName: "Home Address 8", cDateProj: "20/03/2026 14:15", tProj: "01:00:00"
+        },
+        { 
+            cId: "1873", cCode: "deHa", sId: "523463-1", sCode: "AE9", uName: "hung.tm", step: "Upload", statusServ: "Wait", nServ: "Mock text Pano.", tServ: "00:00:00", tStep: "00:00:00", gName: "HN",
+            sName: "Pano", relUsers: "hung.tm", cDateServ: "20/03/2026 15:00", cDateStep: "20/03/2026 15:00", wStep: "", isStarted: false,
+            wGroup: "", nClient: "Note deHa.", wClient: "Warning deHa.",
+            pStatus: "WAITING", pId: "500109", pName: "Home Address 9", cDateProj: "20/03/2026 14:50", tProj: "00:00:00"
+        },
+        { 
+            cId: "1374", cCode: "chEr", sId: "523456-3", sCode: "BE3", uName: "loi.nv", step: "Edit", statusServ: "Pause", nServ: "Mock text Video Edit.", tServ: "00:20:00", tStep: "00:20:00", gName: "HN1",
+            sName: "Video", relUsers: "loi.nv, dat.dt", cDateServ: "20/03/2026 16:00", cDateStep: "20/03/2026 16:00", wStep: "Warning Video Edit.", isStarted: false,
+            wGroup: "Warning HN1.", nClient: "Note chEr.", wClient: "",
+            pStatus: "PAUSED", pId: "500101", pName: "Home Address 1", cDateProj: "20/03/2026 07:30", tProj: "02:00:00"
+        }
+    ];
+
+    const tableBody = document.getElementById('tableBody');
+    const toast = document.getElementById('toast');
+    let currentSelectedItem = null;
+
+    function switchTab(event, tabId) {
+        document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+        document.getElementById(tabId).classList.add('active');
+    }
+
+    function renderMockComments(item) {
+        const cmtContainer = document.getElementById('commentsList');
+        const userInitial = item.uName.charAt(0).toUpperCase();
+        
+        cmtContainer.innerHTML = `
+            <div class="comment-item">
+                <div class="cmt-avatar">${userInitial}</div>
+                <div class="cmt-body">
+                    <div class="cmt-header"><span class="cmt-user">${item.uName}</span><span class="cmt-time">10 phút trước</span></div>
+                    <div class="cmt-text">Tôi đang xử lý phần <strong>${item.step}</strong>. Đã check file nguồn.</div>
+                </div>
+            </div>
+            <div class="comment-item">
+                <div class="cmt-avatar" style="background:var(--brand-white); color:var(--brand-gray); border-color: var(--brand-border);">Q</div>
+                <div class="cmt-body">
+                    <div class="cmt-header"><span class="cmt-user" style="color:var(--brand-gray);">QC.Manager</span><span class="cmt-time">2 giờ trước</span></div>
+                    <div class="cmt-text">Lưu ý: <em>${item.nServ}</em>.</div>
+                </div>
+            </div>
+            <div class="comment-item">
+                <div class="cmt-avatar" style="background:var(--bg-yellow); color:var(--text-yellow); border-color: var(--border-yellow);">S</div>
+                <div class="cmt-body" style="background: var(--bg-yellow);">
+                    <div class="cmt-header"><span class="cmt-user" style="color:var(--text-yellow);">System</span><span class="cmt-time">${item.cDateServ}</span></div>
+                    <div class="cmt-text" style="font-size: 12px; color: var(--text-yellow);">Assigned to Group <strong>${item.gName}</strong>.</div>
+                </div>
+            </div>
+        `;
+    }
+
+    function renderTable() {
+        tableBody.innerHTML = ''; 
+        data.forEach(item => {
+            const row = document.createElement('div');
+            row.className = 'master-grid row';
+            if(currentSelectedItem && currentSelectedItem.sId === item.sId) { row.classList.add('selected'); }
+            
+            row.onclick = (e) => {
+                document.querySelectorAll('.row').forEach(r => r.classList.remove('selected'));
+                row.classList.add('selected');
+                populateSidebar(item);
+                document.getElementById('sidebar').classList.add('open');
+                document.querySelectorAll('.tab-btn')[0].click(); // Reset tab
+                if(e.target.classList.contains('click-copy') || e.target.closest('.click-copy')) {
+                    const textToCopy = e.target.innerText;
+                    navigator.clipboard.writeText(textToCopy).then(() => {
+                        toast.style.display = 'block';
+                        setTimeout(() => { toast.style.display = 'none'; }, 1500);
+                    });
+                }
+            };
+
+            // Semantic Status Colors
+            let statusColor = item.statusServ === 'Process' ? '#166534' : (item.statusServ === 'Complete' ? '#1e40af' : (item.statusServ === 'Pause' ? '#475569' : '#92400e'));
+            let statusBg = item.statusServ === 'Process' ? '#dcfce7' : (item.statusServ === 'Complete' ? '#dbeafe' : (item.statusServ === 'Pause' ? '#f1f5f9' : '#fef3c7'));
+            
+            let tServColor = item.tServ === '00:00:00' ? 'var(--brand-gray)' : 'var(--text-red)';
+            let tStepColor = item.tStep === '00:00:00' ? 'var(--brand-gray)' : 'var(--text-red)';
+
+            // TEXT MÀU ĐEN (BRAND-DARK) HOẶC XÁM, KHÔNG DÙNG MÀU CAM (ACCENT) CHO TEXT TRONG LIST
+            row.innerHTML = `
+                <div class="td">${item.cId}</div>
+                <div class="td font-weight-bold" style="color:var(--brand-dark);">${item.cCode}</div>
+                <div class="td sticky-col col-pin-1" style="font-weight:800; color:var(--brand-dark);">${item.sId}</div>
+                <div class="td sticky-col col-pin-2" style="font-weight:800; color:var(--brand-dark);">${item.sCode}</div>
+                <div class="td font-weight-bold" style="color:var(--brand-dark);">${item.uName}</div>
+                <div class="td" style="font-weight:600;">${item.step}</div>
+                <div class="td"><span style="padding:4px 8px; border-radius:4px; background:${statusBg}; color:${statusColor}; font-weight:700;">${item.statusServ}</span></div>
+                <div class="td text-note-list click-copy" title="Click to copy">${item.nServ}</div>
+                <div class="td" style="font-weight:700; color:${tServColor}">${item.tServ}</div>
+                <div class="td" style="font-weight:700; color:${tStepColor}">${item.tStep}</div>
+                <div class="td font-weight-bold">${item.gName}</div>
+                <div class="td"></div>
+            `;
+            tableBody.appendChild(row);
+        });
+    }
+
+    function populateSidebar(item) {
+        currentSelectedItem = item; 
+        
+        const startWrapper = document.getElementById('sideActionStart');
+        const activeWrapper = document.getElementById('sideActionActive');
+        if (item.isStarted) {
+            startWrapper.style.display = 'none';
+            activeWrapper.style.display = 'grid'; 
+        } else {
+            startWrapper.style.display = 'flex'; 
+            activeWrapper.style.display = 'none';
+        }
+
+        document.getElementById('sServId').innerText = item.sId;
+        document.getElementById('sServCode').innerText = item.sCode;
+        document.getElementById('sServName').innerText = item.sName;
+        document.getElementById('sNoteService').innerText = item.nServ;
+        document.getElementById('sRelUsers').innerText = item.relUsers; 
+        
+        let statusColor = item.statusServ === 'Process' ? '#166534' : (item.statusServ === 'Complete' ? '#1e40af' : (item.statusServ === 'Pause' ? '#475569' : '#92400e'));
+        let statusBg = item.statusServ === 'Process' ? '#dcfce7' : (item.statusServ === 'Complete' ? '#dbeafe' : (item.statusServ === 'Pause' ? '#f1f5f9' : '#fef3c7'));
+        
+        document.getElementById('sStatus').innerHTML = item.statusServ;
+        document.getElementById('sStatus').style.background = statusBg;
+        document.getElementById('sStatus').style.color = statusColor;
+        
+        document.getElementById('sTimerServ').innerText = item.tServ;
+        document.getElementById('sTimerServ').parentElement.style.color = item.tServ === '00:00:00' ? 'var(--brand-gray)' : 'var(--text-red)';
+        document.getElementById('sCreatedServ').innerText = item.cDateServ;
+
+        document.getElementById('sStep').innerText = item.step;
+        if(item.wStep) { document.getElementById('wrapWarnStep').style.display = 'block'; document.getElementById('sWarnStep').innerText = item.wStep; } 
+        else { document.getElementById('wrapWarnStep').style.display = 'none'; }
+        document.getElementById('sTimerStep').innerText = item.tStep;
+        document.getElementById('sTimerStep').parentElement.style.color = item.tStep === '00:00:00' ? 'var(--brand-gray)' : 'var(--text-red)';
+        document.getElementById('sCreatedStep').innerText = item.cDateStep;
+
+        document.getElementById('sGroupName').innerText = item.gName;
+        if(item.wGroup) { document.getElementById('wrapWarnGroup').style.display = 'block'; document.getElementById('sWarnGroup').innerText = item.wGroup; } 
+        else { document.getElementById('wrapWarnGroup').style.display = 'none'; }
+
+        document.getElementById('sClientId').innerText = item.cId;
+        document.getElementById('sClientCode').innerText = item.cCode;
+        if(item.nClient) { document.getElementById('wrapNoteClient').style.display = 'block'; document.getElementById('sNoteClient').innerText = item.nClient; } 
+        else { document.getElementById('wrapNoteClient').style.display = 'none'; }
+        if(item.wClient) { document.getElementById('wrapWarnClient').style.display = 'block'; document.getElementById('sWarnClient').innerText = item.wClient; } 
+        else { document.getElementById('wrapWarnClient').style.display = 'none'; }
+
+        document.getElementById('sStatusProj').innerText = item.pStatus;
+        document.getElementById('sProjId').innerText = item.pId;
+        document.getElementById('sProjName').innerText = item.pName;
+        document.getElementById('sTimerProj').innerText = item.tProj;
+        document.getElementById('sTimerProj').parentElement.style.color = item.tProj === '00:00:00' ? 'var(--brand-gray)' : 'var(--text-red)';
+        document.getElementById('sCreatedProj').innerText = item.cDateProj;
+
+        renderMockComments(item);
+    }
+
+    function listAction(sId, action) {
+        let item = data.find(i => i.sId === sId);
+        if(!item) return;
+
+        if(action === 'start') { item.isStarted = true; item.statusServ = "Process"; } 
+        else if (action === 'complete') { item.statusServ = "Complete"; } 
+        else if (action === 'reject') { item.isStarted = false; item.statusServ = "Wait"; } 
+        else if (action === 'pause') { item.isStarted = false; item.statusServ = "Pause"; }
+        
+        renderTable();
+        if(currentSelectedItem && currentSelectedItem.sId === sId) { populateSidebar(item); }
+    }
+
+    function startCurrentJob() { listAction(currentSelectedItem.sId, 'start'); }
+    function completeJob() { listAction(currentSelectedItem.sId, 'complete'); closeSidebar(new Event('click')); }
+    function rejectJob() { listAction(currentSelectedItem.sId, 'reject'); }
+    function pauseJob() { listAction(currentSelectedItem.sId, 'pause'); }
+
+    function closeSidebar(e) {
+        e.stopPropagation(); 
+        document.getElementById('sidebar').classList.remove('open');
+        currentSelectedItem = null;
+        document.querySelectorAll('.row').forEach(r => r.classList.remove('selected'));
+    }
+
+    renderTable();
+</script>
+
+</body>
+</html>
