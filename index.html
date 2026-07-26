@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Hệ Thống Quản Lý - Gasy</title>
+  <title>Design for PSVN</title>
   <style>
     * {
       box-sizing: border-box;
@@ -17,7 +17,7 @@
       background-color: #f4f6f8;
       overflow: hidden;
     }
-    /* Thanh Menu bên trái */
+    /* Thanh Sidebar Menu Bên Trái */
     .sidebar {
       width: 280px;
       background: #ffffff;
@@ -30,7 +30,7 @@
       overflow-y: auto;
     }
     .sidebar h2 {
-      font-size: 15px;
+      font-size: 14px;
       color: #0969da;
       padding-bottom: 10px;
       border-bottom: 2px solid #0969da;
@@ -56,7 +56,7 @@
       color: #0969da;
       transform: translateX(3px);
     }
-    /* Khung chiếu hiển thị trang con */
+    /* Khung chứa Content các trang con */
     .content-area {
       flex-grow: 1;
       height: 100vh;
@@ -71,23 +71,23 @@
 </head>
 <body>
 
-  <!-- Menu chọn trang con -->
+  <!-- Menu Sidebar bên trái -->
   <div class="sidebar">
-    <h2>📊 Gasy Dashboard</h2>
+    <h2>Design for PSVN</h2>
     
-    <a href="./lobby.html" target="view-frame" class="menu-item">🏠 Sảnh chính (Lobby)</a>
-    <a href="./dash.html" target="view-frame" class="menu-item">📈 Tổng quan (Dash)</a>
-    <a href="./main_menu.html" target="view-frame" class="menu-item">📑 Menu chính (Main Menu)</a>
-    <a href="./bxh.html" target="view-frame" class="menu-item">🏆 Bảng xếp hạng (BXH)</a>
-    <a href="./group_ranking.html" target="view-frame" class="menu-item">🥇 Xếp hạng nhóm</a>
-    <a href="./crt.html" target="view-frame" class="menu-item">📋 Danh mục CRT</a>
-    <a href="./project_list_cso.html" target="view-frame" class="menu-item">📁 Danh sách Dự án CSO</a>
-    <a href="./srv_list.html" target="view-frame" class="menu-item">🛠️ Danh sách Dịch vụ</a>
-    <a href="./stats_personal.html" target="view-frame" class="menu-item">👤 Thống kê cá nhân</a>
-    <a href="./quotation_alert.html" target="view-frame" class="menu-item">🔔 Thấy báo giá (Quotation Alert)</a>
+    <a href="./lobby.html" target="view-frame" class="menu-item">Get Job</a>
+    <a href="./dash.html" target="view-frame" class="menu-item">Dashboard</a>
+    <a href="./main_menu.html" target="view-frame" class="menu-item">Main Menu</a>
+    <a href="./bxh.html" target="view-frame" class="menu-item">Staff Rankings</a>
+    <a href="./group_ranking.html" target="view-frame" class="menu-item">Workload Overview</a>
+    <a href="./crt.html" target="view-frame" class="menu-item">Correction List</a>
+    <a href="./project_list_cso.html" target="view-frame" class="menu-item">Projects Receipt</a>
+    <a href="./srv_list.html" target="view-frame" class="menu-item">Task List</a>
+    <a href="./stats_personal.html" target="view-frame" class="menu-item">Personal Statistic</a>
+    <a href="./quotation_alert.html" target="view-frame" class="menu-item">Quotation Alert</a>
   </div>
 
-  <!-- Màn hình chiếu nội dung file con bên phải (Mặc định nạp lobby.html) -->
+  <!-- Khung chiếu Content trang con bên phải -->
   <div class="content-area">
     <iframe name="view-frame" src="./lobby.html"></iframe>
   </div>
