@@ -1,268 +1,96 @@
 <!DOCTYPE html>
 <html lang="vi">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Team Review Hub - PSVN (Grid View)</title>
-    <style>
-        /* =========================================
-           CSS VARIABLES (Hệ thống màu chuẩn)
-           ========================================= */
-        :root {
-            --bg-white: #ffffff;       /* Nền chính */
-            --accent-orange: #f67e20;  /* Màu điểm nhấn, CTA, đường line */
-            --text-dark: #282828;      /* Màu chữ chính, tiêu đề */
-            --text-ash: #6f6b65;       /* Màu chữ phụ, mô tả */
-            --border-grey: #7e7a75;    /* Đường viền, chi tiết phụ */
-        }
-
-        /* =========================================
-           GLOBAL STYLES
-           ========================================= */
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        body {
-            font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f8f9fa; /* Màu nền body xám cực nhẹ để nổi bật container trắng */
-            color: var(--text-dark);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            padding: 20px;
-        }
-
-        /* =========================================
-           CONTAINER & HEADER
-           ========================================= */
-        .container {
-            background: var(--bg-white);
-            padding: 2.5rem 2.5rem;
-            border-radius: 16px;
-            border: 1px solid rgba(126, 122, 117, 0.2); 
-            box-shadow: 0 10px 30px rgba(40, 40, 40, 0.04);
-            width: 100%;
-            max-width: 1000px; /* Mở rộng max-width để chứa Grid */
-            
-            /* Cấu hình animation lúc load trang */
-            opacity: 0;
-            transform: translateY(15px);
-            transition: opacity 0.6s ease-out, transform 0.6s ease-out;
-        }
-
-        .container.loaded {
-            opacity: 1;
-            transform: translateY(0);
-        }
-
-        h2 {
-            color: var(--text-dark);
-            text-align: center;
-            font-weight: 700;
-            font-size: 1.6rem;
-            margin-bottom: 2.5rem;
-            position: relative;
-            padding-bottom: 15px;
-        }
-
-        h2::after {
-            content: '';
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 60px;
-            height: 3px;
-            background-color: var(--accent-orange);
-            border-radius: 2px;
-        }
-
-        /* =========================================
-           GRID LAYOUT (Bố cục hàng ngang)
-           ========================================= */
-        .link-grid {
-            display: grid;
-            /* Tự động chia cột: chiều rộng tối thiểu 280px, tối đa 1 phần đều nhau */
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 16px;
-        }
-
-        /* =========================================
-           LINK ITEMS (Thẻ con)
-           ========================================= */
-        .link-item {
-            display: flex;
-            align-items: center;
-            background: var(--bg-white);
-            border: 1px solid rgba(126, 122, 117, 0.3);
-            border-radius: 10px;
-            text-decoration: none;
-            padding: 16px 18px;
-            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-            height: 100%; /* Giúp các thẻ trong cùng 1 hàng có chiều cao bằng nhau */
-        }
-
-        .link-item:hover {
-            border-color: var(--accent-orange);
-            transform: translateY(-3px);
-            box-shadow: 0 6px 15px rgba(246, 126, 32, 0.12);
-        }
-
-        .number {
-            background: var(--accent-orange);
-            color: var(--bg-white);
-            width: 38px;
-            height: 38px;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-weight: 600;
-            font-size: 1rem;
-            margin-right: 16px;
-            flex-shrink: 0;
-        }
-
-        .text-content {
-            flex-grow: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-        }
-
-        .title {
-            font-weight: 600;
-            color: var(--text-dark);
-            font-size: 1.05rem;
-            transition: color 0.2s ease;
-        }
-
-        .desc {
-            font-size: 0.85rem;
-            color: var(--text-ash);
-            line-height: 1.4;
-        }
-
-        .link-item:hover .title {
-            color: var(--accent-orange);
-        }
-
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hệ Thống Quản Lý - Gasy</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+    body {
+      display: flex;
+      height: 100vh;
+      background-color: #f4f6f8;
+      overflow: hidden;
+    }
+    /* Thanh Menu bên trái */
+    .sidebar {
+      width: 280px;
+      background: #ffffff;
+      border-right: 1px solid #e1e4e8;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      flex-shrink: 0;
+      overflow-y: auto;
+    }
+    .sidebar h2 {
+      font-size: 15px;
+      color: #0969da;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #0969da;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .menu-item {
+      display: block;
+      padding: 10px 12px;
+      background: #f8f9fa;
+      border: 1px solid #e1e4e8;
+      border-radius: 6px;
+      text-decoration: none;
+      color: #24292f;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    .menu-item:hover {
+      background: #ddf4ff;
+      border-color: #54aeff;
+      color: #0969da;
+      transform: translateX(3px);
+    }
+    /* Khung chiếu hiển thị trang con */
+    .content-area {
+      flex-grow: 1;
+      height: 100vh;
+      background: #ffffff;
+    }
+    iframe {
+      width: 100%;
+      height: 100%;
+      border: none;
+    }
+  </style>
 </head>
 <body>
 
-<div class="container" id="hubContainer">
-    <h2>Team Review Dashboard</h2>
+  <!-- Menu chọn trang con -->
+  <div class="sidebar">
+    <h2>📊 Gasy Dashboard</h2>
     
-    <div class="link-grid">
-    
-         <a href="https://ps-vn.com/rv/quotation_alert.html" class="link-item">
-            <div class="number">3</div>
-            <div class="text-content">
-                <span class="title">Quotation Alert</span>
-                <span class="desc">Quotation Alert</span>
-            </div>
-        </a>
-    
-     <a href="https://ps-vn.com/rv/bxh.html" class="link-item">
-            <div class="number">3</div>
-            <div class="text-content">
-                <span class="title">Work Champion</span>
-                <span class="desc">Work Champion</span>
-            </div>
-        </a>
-        
-        <a href="https://ps-vn.com/rv/crt.html" class="link-item">
-            <div class="number">3</div>
-            <div class="text-content">
-                <span class="title">Correction</span>
-                <span class="desc">Correction</span>
-            </div>
-        </a>
-        
-        <a href="https://ps-vn.com/rv/dash.html" class="link-item">
-            <div class="number">3</div>
-            <div class="text-content">
-                <span class="title">Dashboard</span>
-                <span class="desc">Dashboard</span>
-            </div>
-        </a>
-        
-        <a href="https://ps-vn.com/rv/stats_personal.html" class="link-item">
-            <div class="number">3</div>
-            <div class="text-content">
-                <span class="title">Stats Personal</span>
-                <span class="desc">stats_personal</span>
-            </div>
-        </a>
-        
-        <a href="https://ps-vn.com/rv/group_ranking.html" class="link-item">
-            <div class="number">3</div>
-            <div class="text-content">
-                <span class="title">Group Ranking</span>
-                <span class="desc">Group Ranking</span>
-            </div>
-        </a>
-        
-         <a href="https://ps-vn.com/rv/main_menu.html" class="link-item">
-            <div class="number">3</div>
-            <div class="text-content">
-                <span class="title">Main Menu Sidebar</span>
-                <span class="desc">Main Menu</span>
-            </div>
-        </a>
-        
-        <a href="https://ps-vn.com/rv/project_list_cso.html" class="link-item">
-            <div class="number">1</div>
-            <div class="text-content">
-                <span class="title">Project List CSO</span>
-                <span class="desc">Project List CSO</span>
-            </div>
-        </a>
+    <a href="./lobby.html" target="view-frame" class="menu-item">🏠 Sảnh chính (Lobby)</a>
+    <a href="./dash.html" target="view-frame" class="menu-item">📈 Tổng quan (Dash)</a>
+    <a href="./main_menu.html" target="view-frame" class="menu-item">📑 Menu chính (Main Menu)</a>
+    <a href="./bxh.html" target="view-frame" class="menu-item">🏆 Bảng xếp hạng (BXH)</a>
+    <a href="./group_ranking.html" target="view-frame" class="menu-item">🥇 Xếp hạng nhóm</a>
+    <a href="./crt.html" target="view-frame" class="menu-item">📋 Danh mục CRT</a>
+    <a href="./project_list_cso.html" target="view-frame" class="menu-item">📁 Danh sách Dự án CSO</a>
+    <a href="./srv_list.html" target="view-frame" class="menu-item">🛠️ Danh sách Dịch vụ</a>
+    <a href="./stats_personal.html" target="view-frame" class="menu-item">👤 Thống kê cá nhân</a>
+    <a href="./quotation_alert.html" target="view-frame" class="menu-item">🔔 Thấy báo giá (Quotation Alert)</a>
+  </div>
 
-        <a href="https://ps-vn.com/rv/srv_list.html" class="link-item">
-            <div class="number">1</div>
-            <div class="text-content">
-                <span class="title">Service List</span>
-                <span class="desc">Danh sách job</span>
-            </div>
-        </a>
-
-        <a href="https://ps-vn.com/rv/lobby.html" class="link-item">
-            <div class="number">3</div>
-            <div class="text-content">
-                <span class="title">Lobby</span>
-                <span class="desc">Job lobby list</span>
-            </div>
-        </a>
-        
-        <a href="https://ps-vn.com/rv/prj_list.html" class="link-item">
-            <div class="number">2</div>
-            <div class="text-content">
-                <span class="title">Project List</span>
-                <span class="desc">Danh sách project</span>
-            </div>
-        </a>
-    </div>
-</div>
-
-<script>
-    // =========================================
-    // JAVASCRIPT
-    // =========================================
-    document.addEventListener("DOMContentLoaded", () => {
-        const container = document.getElementById('hubContainer');
-        
-        // Timeout nhỏ để đảm bảo CSS đã render xong trước khi kích hoạt transition
-        setTimeout(() => {
-            container.classList.add('loaded');
-        }, 50);
-    });
-</script>
+  <!-- Màn hình chiếu nội dung file con bên phải (Mặc định nạp lobby.html) -->
+  <div class="content-area">
+    <iframe name="view-frame" src="./lobby.html"></iframe>
+  </div>
 
 </body>
 </html>
